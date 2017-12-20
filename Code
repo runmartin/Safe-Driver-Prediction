@@ -1,0 +1,107 @@
+# Porto Seguro's Safe Driver Prediction
+
+##### About: Porto Seguro is one of Brazil’s largest auto and homeowner insurance companies. Inaccuracies in car insurance company’s claim predictions raise the cost of insurance for good drivers and reduce the price for bad ones. 
+
+###### What problem are you solving? 
+
+Build a strong prediction model Porto Seguro will be able utilize in order to provide a fairer insurance cost for their customers based on the individual’s driving habits. 
+
+###### Hypothesis: 
+    
+Correlated binary and categorical predictors will help us determine a strong predictive model. We will be able to determine success by Normalized Gini Coefficient. 
+
+#General Imports
+
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import statsmodels.formula.api as smf
+import matplotlib.pyplot as plt
+
+%matplotlib inline
+
+#Load in the dataset
+
+train = pd.read_csv('/Users/mnavarrete/Desktop/train.csv')
+test = pd.read_csv('/Users/mnavarrete/Desktop/test.csv')
+
+### Quality check
+
+train.head()
+
+#We are given 56 anonymized features which we can use to model claims and make predictions.
+
+#Based on the dataset description we know: 
+
+#Variables that belong to similar groupings are tagged as such in the feature names (e.g., ind, reg, car, calc).
+
+#Variables names include the postfix bin to indicate binary features and cat to indicate categorical features.
+
+#Variables without these designations are either continuous or ordinal.
+
+train.info()
+
+#Shape of dataset
+
+train.shape
+
+#Check if we have any null across columns
+
+train.isnull().sum()
+
+#Based on the description we know the dataset has filled the null data with -1 
+
+#Identify where and how many -1 we have in the dataset
+
+(train==-1).sum()
+
+#Replace the -1 with NaN
+
+train_copy = train
+train_copy = train_copy.replace(-1, np.NaN)
+
+#To ensure NaN has been implemented we can run a boolean function that returns
+#if there is Null across the dataset
+
+train_copy.isnull().any().any()
+
+#Target Exploration
+
+#The target variable is imbalanced. 
+
+#Knowing this, we will try a few approaches to see how we can avoid overfitting the data. 
+
+plt.figure(figsize=(10,3))
+sns.countplot(train_copy['target'],palette='rainbow')
+plt.xlabel('Target')
+plt.title('Target variable distribution')
+
+print train_copy.shape
+train_copy['target'].value_counts()
+
+##Now let's prepare lists of numeric, categorical and binary columns
+# All features
+
+all_features = train_copy.columns.tolist()
+all_features.remove('target')
+
+# Numeric Features
+numeric_features = [x for x in all_features if x[-3:] not in ['bin', 'cat']]
+
+# Categorical Features
+categorical_features = [x for x in all_features if x[-3:]=='cat']
+
+# Binary Features
+binary_features = [x for x in all_features if x[-3:]=='bin']
+
+# Corralation between Variables using corralation matrix heatmap
+# Getting correlation matrix
+# The data obtained in correlation we can test for how much they can influence the dependant variable 'Target'
+
+cor_matrix = train_copy[numeric_features].corr().round(2)
+
+# Plotting heatmap 
+fig = plt.figure(figsize=(18,18));
+sns.heatmap(cor_matrix, annot=True, center=0, cmap = sns.diverging_palette(250, 10, as_cmap=True), ax=plt.subplot(111));
+plt.show()
+
